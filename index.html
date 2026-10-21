@@ -1,67 +1,25 @@
+
 <!doctype html>
 <html lang="uk">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="Dogfight — навчальна гра для демонстрації event loop та fixed timestep."
-    />
-    <title>Dogfight — Event Loop Lab</title>
+    <title>Dogfight — Lab 02</title>
   </head>
   <body>
     <main class="game">
-      <header class="game-header">
-        <div>
-          <p class="eyebrow">LAB 01 · JAVASCRIPT</p>
-          <h1>Dogfight</h1>
-          <p class="subtitle">The Event Loop Is the Game Loop</p>
-        </div>
-        <div class="status">
-          <span class="status-dot"></span>
-          SIMULATION ACTIVE
-        </div>
-      </header>
+      <h1>Dogfight</h1>
 
-      <section class="game-panel" aria-label="Ігрове поле">
-        <canvas id="game-canvas" aria-label="Керування космічним кораблем">
-          Ваш браузер не підтримує Canvas.
-        </canvas>
+      <div class="hud">
+        <span>Здоров'я: <strong id="hp">3</strong></span>
+        <span>Рахунок: <strong id="score">0</strong></span>
+        <span>Керування: WASD / стрілки, Space — стрільба</span>
+      </div>
 
-        <div class="hud" aria-live="off">
-          <div class="metric">
-            <span>SIMULATION</span>
-            <strong id="steps">0 steps/s</strong>
-          </div>
-          <div class="metric">
-            <span>RENDER</span>
-            <strong id="fps">0 FPS</strong>
-          </div>
-          <div class="metric">
-            <span>FRAME TIME</span>
-            <strong id="frame-time">0.00 ms</strong>
-          </div>
-        </div>
+      <canvas id="game" width="900" height="600"></canvas>
 
-        <div class="canvas-hint">
-          <span>W / ↑ THRUST</span>
-          <span>A / D ROTATE</span>
-          <span>S BRAKE</span>
-        </div>
-      </section>
-
-      <section class="bottom-panel">
-        <div>
-          <h2>Flight controls</h2>
-          <p>Керуй кораблем, змінюй напрямок і досліджуй арену.</p>
-        </div>
-        <button id="reset-button" type="button">Reset ship</button>
-      </section>
-
-      <footer>
-        <span>FIXED TIMESTEP · 60 Hz</span>
-        <span>CANVAS 2D · ES MODULES</span>
-      </footer>
+      <p>Збирай бонуси, знищуй астероїди та уникай зіткнень.</p>
+      <button id="reset">Перезапустити гру</button>
     </main>
 
     <script type="module" src="/src/main.js"></script>

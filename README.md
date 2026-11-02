@@ -152,16 +152,16 @@ console.log("F");
 
 1. **404 — відсутній ресурс.** Тимчасове перейменування `asteroid.svg` спричиняє помилку HTTP 404. Завантаження переривається, користувач отримує повідомлення та може повторити спробу після відновлення файлу.
 
-![alt text](404.png)
+![alt text](tests/404.png)
 
 2. **Network timeout.** Перевірено тайм-аут HTTP-запиту через AbortSignal.timeout. Після завершення часу очікування запит скасовується.
 
-![alt text](timeout.png)
+![alt text](tests/timeout.png)
 
 3. **Abort during loading.** Під час завантаження натиснуто кнопку скасування. AbortController перериває активні запити, а користувач отримує повідомлення про скасування.
 
-![alt text](abort.png)
+![alt text](tests/abort.png)
 
 4. **Corrupt JSON.** Некоректний вміст `arena.json` спричиняє помилку під час читання JSON. Програма показує повідомлення й дозволяє повторити завантаження після виправлення файлу.
 
-![alt text](corruptjson.png)
+![alt text](tests/corruptjson.png)

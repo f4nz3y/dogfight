@@ -4,22 +4,56 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dogfight — Lab 02</title>
+    <title>Dogfight — Lab 03</title>
   </head>
   <body>
-    <main class="game">
-      <h1>Dogfight</h1>
+    <main class="app">
+      <section id="loading-screen" class="screen">
+        <h1>Завантаження Dogfight</h1>
+        <p id="loading-status">Підготовка ресурсів...</p>
 
-      <div class="hud">
-        <span>Здоров'я: <strong id="hp">3</strong></span>
-        <span>Рахунок: <strong id="score">0</strong></span>
-        <span>Керування: WASD / стрілки, Space — стрільба</span>
-      </div>
+        <div class="progress-track">
+          <div id="progress-bar" class="progress-bar"></div>
+        </div>
 
-      <canvas id="game" width="900" height="600"></canvas>
+        <p id="progress-text">0%</p>
+        <p id="loading-error" class="error"></p>
+        <button id="retry-loading" hidden>Повторити завантаження</button>
+        <button id="cancel-loading">Скасувати завантаження</button>
+      </section>
 
-      <p>Збирай бонуси, знищуй астероїди та уникай зіткнень.</p>
-      <button id="reset">Перезапустити гру</button>
+      <section id="lobby-screen" class="screen" hidden>
+        <h1>Dogfight Lobby</h1>
+
+        <label>
+          Ім'я гравця
+          <input id="player-name" value="Player" maxlength="20" />
+        </label>
+
+        <h2>Доступні кімнати</h2>
+        <div id="room-list"></div>
+
+        <input id="room-id" type="hidden" />
+        <p id="lobby-status"></p>
+
+        <button id="join-button">Приєднатися</button>
+        <button id="refresh-button">Оновити кімнати</button>
+      </section>
+
+      <section id="game-screen" class="screen" hidden>
+        <h1>Dogfight</h1>
+
+        <div class="hud">
+          <span>Здоров'я: <strong id="hp">3</strong></span>
+          <span>Рахунок: <strong id="score">0</strong></span>
+          <span>Кімната: <strong id="room-name">—</strong></span>
+        </div>
+
+        <canvas id="game" width="900" height="600"></canvas>
+
+        <p>WASD / стрілки — рух, Space — стрільба</p>
+        <button id="leave-game">Повернутися до лобі</button>
+      </section>
     </main>
 
     <script type="module" src="/src/main.js"></script>

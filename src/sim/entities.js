@@ -1,4 +1,4 @@
-
+import { emitGameEvent } from "../events/gameEvents.js";
 import { Entity } from "./entity.js";
 import { Vector2 } from "./vector.js";
 
@@ -101,6 +101,10 @@ export class Ship extends Entity {
     );
 
     world.spawn(bullet);
+    emitGameEvent("fired", {
+      x: bullet.pos.x,
+      y: bullet.pos.y
+    });
     this.fireCooldown = this.rapidFire > 0 ? 0.08 : 0.25;
   }
 

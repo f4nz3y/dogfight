@@ -1,0 +1,32 @@
+
+{
+  "images": [
+    {
+      "name": "ship",
+      "url": "/assets/ship.svg"
+    },
+    {
+      "name": "asteroid",
+      "url": "/assets/asteroid.svg"
+    },
+    {
+      "name": "bullet",
+      "url": "/assets/bullet.svg"
+    }
+  ],
+  "sounds": [
+    {
+      "name": "shoot",
+      "url": "/assets/shoot.wav"
+    },
+    {
+      "name": "hit",
+      "url": "/assets/hit.wav"
+    },
+    {
+      "name": "explosion",
+      "url": "/assets/explosion.wav"
+    }
+  ],
+  "arena": "/assets/arena.json"
+}

@@ -1,0 +1,37 @@
+{
+  "rooms": [
+    {
+      "id": "training",
+      "name": "Training Room",
+      "players": 1,
+      "capacity": 4,
+      "arena": {
+        "width": 900,
+        "height": 600,
+        "asteroidCount": 5
+      }
+    },
+    {
+      "id": "classic",
+      "name": "Classic Battle",
+      "players": 2,
+      "capacity": 4,
+      "arena": {
+        "width": 900,
+        "height": 600,
+        "asteroidCount": 8
+      }
+    },
+    {
+      "id": "hard",
+      "name": "Hardcore Arena",
+      "players": 3,
+      "capacity": 4,
+      "arena": {
+        "width": 1200,
+        "height": 800,
+        "asteroidCount": 15
+      }
+    }
+  ]
+}

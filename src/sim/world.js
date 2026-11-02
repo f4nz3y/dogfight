@@ -1,4 +1,4 @@
-
+import { emitGameEvent } from "../events/gameEvents.js";
 import { findCollisions } from "./collision.js";
 import {
   Asteroid,
@@ -125,6 +125,10 @@ export class World {
 
       if (a.kind === "bullet" && b.kind === "asteroid") {
         b.damage(a.damageAmount);
+        emitGameEvent("hit", {
+          x: b.pos.x,
+          y: b.pos.y
+        });
         a.alive = false;
 
         if (!b.alive) {
@@ -132,17 +136,31 @@ export class World {
           this.spawn(new Explosion(b.pos.x, b.pos.y));
         }
 
+        emitGameEvent("exploded", {
+          x: b.pos.x,
+          y: b.pos.y
+        });
+
         continue;
       }
 
       if (b.kind === "bullet" && a.kind === "asteroid") {
         a.damage(b.damageAmount);
+        emitGameEvent("hit", {
+          x: a.pos.x,
+          y: a.pos.y
+        });
         b.alive = false;
 
         if (!a.alive) {
           this.score += 10;
           this.spawn(new Explosion(a.pos.x, a.pos.y));
         }
+
+        emitGameEvent("exploded", {
+          x: a.pos.x,
+          y: a.pos.y
+        });
 
         continue;
       }

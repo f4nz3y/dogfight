@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dogfight — WebSocket test</title>
+  <style>
+    body { font: 16px system-ui, sans-serif; max-width: 760px; margin: 32px auto; padding: 0 16px; }
+    label { display: block; margin: 12px 0; }
+    input { padding: 8px; min-width: 260px; }
+    button { padding: 8px 14px; margin: 4px; }
+    pre { background: #111827; color: #d1fae5; padding: 16px; min-height: 220px; white-space: pre-wrap; }
+    #status { font-weight: 700; }
+  </style>
+</head>
+<body>
+  <h1>WebSocket Test</h1>
+  <p id="status">Не підключено</p>
+
+  <label>Ім'я гравця
+    <input id="name" value="Player">
+  </label>
+
+  <label>ID кімнати
+    <input id="room" placeholder="Встав ID з /api/rooms">
+  </label>
+
+  <button id="connect" type="button">Connect</button>
+  <button id="disconnect" type="button">Disconnect</button>
+
+  <hr>
+
+  <label>Повідомлення
+    <input id="message" maxlength="300" placeholder="Текст повідомлення">
+  </label>
+  <button id="send" type="button">Send</button>
+
+  <h2>Отримані повідомлення</h2>
+  <pre id="output"></pre>
+
+  <script>
+    let socket;
+    const $ = (selector) => document.querySelector(selector);
+    const output = $("#output");
+
+    function log(message) {
+      output.textContent += `${new Date().toLocaleTimeString()} ${message}\n`;
+      output.scrollTop = output.scrollHeight;
+    }
+
+    function setStatus(value) {
+      $("#status").textContent = value;
+    }
+
+    $("#connect").addEventListener("click", () => {
+      if (socket && socket.readyState <= WebSocket.OPEN) {
+        log("З'єднання вже створене або встановлюється");
+        return;
+      }
+
+      const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+      socket = new WebSocket(`${protocol}//${location.host}/ws`);
+
+      socket.addEventListener("open", () => {
+        setStatus("Підключено");
+        log("WebSocket connected");
+
+        socket.send(JSON.stringify({
+          v: 1,
+          type: "join",
+          room: $("#room").value.trim(),
+          name: $("#name").value.trim() || "Player"
+        }));
+      });
+
+      socket.addEventListener("message", (event) => {
+        log(event.data);
+
+        try {
+          const message = JSON.parse(event.data);
+          if (message.type === "error") setStatus(`Помилка: ${message.message}`);
+          if (message.type === "joined") setStatus(`У кімнаті: ${message.room.name}`);
+          if (message.type === "left") setStatus("Вийшли з кімнати");
+        } catch {
+          // Виведення сирого повідомлення вже виконано вище.
+        }
+      });
+
+      socket.addEventListener("close", (event) => {
+        setStatus("Відключено");
+        log(`WebSocket closed: ${event.code} ${event.reason}`);
+      });
+
+      socket.addEventListener("error", () => {
+        setStatus("Помилка WebSocket");
+        log("WebSocket error");
+      });
+    });
+
+    $("#send").addEventListener("click", () => {
+      if (socket?.readyState !== WebSocket.OPEN) {
+        log("Спочатку підключіться до сервера");
+        return;
+      }
+
+      const text = $("#message").value.trim();
+      if (!text) return;
+
+      socket.send(JSON.stringify({ v: 1, type: "chat", text }));
+      $("#message").value = "";
+    });
+
+    $("#disconnect").addEventListener("click", () => {
+      if (socket?.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ v: 1, type: "leave" }));
+        socket.close(1000, "Test client disconnected");
+      }
+    });
+  </script>
+</body>
+</html>

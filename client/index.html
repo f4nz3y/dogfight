@@ -1,21 +1,18 @@
-
 <!doctype html>
 <html lang="uk">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dogfight — Lab 03</title>
+    <title>Dogfight — Лабораторна робота №4</title>
   </head>
   <body>
     <main class="app">
       <section id="loading-screen" class="screen">
         <h1>Завантаження Dogfight</h1>
         <p id="loading-status">Підготовка ресурсів...</p>
-
         <div class="progress-track">
           <div id="progress-bar" class="progress-bar"></div>
         </div>
-
         <p id="progress-text">0%</p>
         <p id="loading-error" class="error"></p>
         <button id="retry-loading" hidden>Повторити завантаження</button>
@@ -24,20 +21,21 @@
 
       <section id="lobby-screen" class="screen" hidden>
         <h1>Dogfight Lobby</h1>
+        <p id="connection-status">WebSocket ще не підключено</p>
 
         <label>
           Ім'я гравця
-          <input id="player-name" value="Player" maxlength="20" />
+          <input id="player-name" value="Player" maxlength="24" />
         </label>
 
         <h2>Доступні кімнати</h2>
         <div id="room-list"></div>
-
         <input id="room-id" type="hidden" />
-        <p id="lobby-status"></p>
+        <p id="lobby-status" role="status"></p>
 
-        <button id="join-button">Приєднатися</button>
-        <button id="refresh-button">Оновити кімнати</button>
+        <button id="create-room-button" type="button">Створити кімнату</button>
+        <button id="join-button" type="button">Приєднатися</button>
+        <button id="refresh-button" type="button">Оновити кімнати</button>
       </section>
 
       <section id="game-screen" class="screen" hidden>
@@ -50,9 +48,22 @@
         </div>
 
         <canvas id="game" width="900" height="600"></canvas>
-
         <p>WASD / стрілки — рух, Space — стрільба</p>
-        <button id="leave-game">Повернутися до лобі</button>
+
+        <section class="multiplayer-panel">
+          <h2>Гравці в кімнаті</h2>
+          <ul id="roster"></ul>
+
+          <h2>Чат кімнати</h2>
+          <div id="chat-messages" aria-live="polite"></div>
+          <label>
+            Повідомлення
+            <input id="chat-input" maxlength="300" />
+          </label>
+          <button id="chat-send" type="button">Надіслати</button>
+        </section>
+
+        <button id="leave-game" type="button">Повернутися до лобі</button>
       </section>
     </main>
 

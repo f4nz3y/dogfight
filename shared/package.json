@@ -1,0 +1,11 @@
+{
+  "name": "@dogfight/shared",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js",
+    "./sim": "./src/sim.js",
+    "./codec": "./src/codec.js"
+  }
+}

@@ -1,11 +1,12 @@
 import { EventEmitter } from "node:events";
-import { randomUUID } from "node:crypto";
+import { randomUUID, randomInt } from "node:crypto";
 
 const DEFAULT_ARENA = Object.freeze({
   width: 900,
   height: 600,
   asteroidCount: 8,
-  background: "#080c18"
+  background: "#080c18",
+  seed: randomInt(1, 0xffffffff)
 });
 
 export class Room extends EventEmitter {
@@ -14,7 +15,7 @@ export class Room extends EventEmitter {
     this.id = id;
     this.name = name;
     this.maxPlayers = maxPlayers;
-    this.arena = { ...DEFAULT_ARENA, ...arena };
+    this.arena = { ...DEFAULT_ARENA, ...arena, seed: arena.seed ?? randomInt(1, 0xffffffff) };
     this.players = new Map();
     this.createdAt = Date.now();
   }

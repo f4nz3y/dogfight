@@ -6,7 +6,7 @@ import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 
 import { MatchLog } from "./log/matchlog.js";
-import { attachWebSocket } from "./ws.js";
+import { attachWebSocket, getRealtimeStats } from "./ws.js";
 import { config, clientDistDir } from "./config.js";
 import { RoomManager } from "./rooms.js";
 
@@ -149,6 +149,14 @@ const server = http.createServer(async (request, response) => {
 
     if (request.method === "GET" && url.pathname === "/api/rooms") {
       sendJson(response, 200, { rooms: roomManager.listRooms() });
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/stats") {
+      sendJson(response, 200, {
+        tickRate: 30,
+        matches: getRealtimeStats()
+      });
       return;
     }
 

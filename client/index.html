@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dogfight — Лабораторна робота №4</title>
+    <title>Dogfight — Лабораторна робота №5</title>
   </head>
   <body>
     <main class="app">
@@ -20,7 +20,13 @@
       </section>
 
       <section id="lobby-screen" class="screen" hidden>
-        <h1>Dogfight Lobby</h1>
+        <h1>Dogfight Lobby — Lab 05</h1>
+        <div class="network-settings">
+          <label>Latency (ms)<input id="latency-input" type="number" min="0" max="500" value="100" /></label>
+          <label>Jitter (ms)<input id="jitter-input" type="number" min="0" max="200" value="30" /></label>
+          <label>Packet drop (%)<input id="drop-input" type="number" min="0" max="20" step="0.5" value="2" /></label>
+          <p>Параметри мережі застосовуються під час нового підключення.</p>
+        </div>
         <p id="connection-status">WebSocket ще не підключено</p>
 
         <label>
@@ -48,7 +54,22 @@
         </div>
 
         <canvas id="game" width="900" height="600"></canvas>
-        <p>WASD / стрілки — рух, Space — стрільба</p>
+        <p>WASD / стрілки — рух, Space — локальний прогноз пострілу</p>
+        <section class="netgraph" aria-live="polite">
+          <h2>Netgraph — мережеві показники</h2>
+          <div class="netgraph-grid">
+            <span>RTT: <strong id="net-rtt">—</strong></span>
+            <span>Snapshot age: <strong id="net-age">—</strong></span>
+            <span>Bytes in/out: <strong id="net-bytes">0 / 0 B/s</strong></span>
+            <span>Pending inputs: <strong id="net-pending">0</strong></span>
+            <span>Correction: <strong id="net-correction">0 px</strong></span>
+            <span>Interpolation: <strong id="net-interpolation">100 ms</strong></span>
+          </div>
+          <label>Interpolation delay (ms)
+            <input id="interpolation-input" type="range" min="33" max="250" value="100" />
+          </label>
+          <p id="net-status">Очікування першого snapshot…</p>
+        </section>
 
         <section class="multiplayer-panel">
           <h2>Гравці в кімнаті</h2>

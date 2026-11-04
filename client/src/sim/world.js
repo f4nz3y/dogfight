@@ -65,7 +65,7 @@ export class World {
     }
   }
 
-  step(dt, inputs = {}) {
+  step(dt, inputs = {}, { spawnPickups = true } = {}) {
     for (const entity of this) {
       if (!entity.alive) continue;
 
@@ -94,9 +94,9 @@ export class World {
       this.respawnTimer = 0;
     }
 
-    this.pickupTimer += dt;
+    if (spawnPickups) this.pickupTimer += dt;
 
-    if (this.pickupTimer >= 10) {
+    if (spawnPickups && this.pickupTimer >= 10) {
       this.pickupTimer = 0;
 
       const type = Math.random() < 0.5 ? "shield" : "rapid";

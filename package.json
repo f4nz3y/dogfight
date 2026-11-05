@@ -13,11 +13,16 @@
     "dev:server": "npm run dev --workspace server",
     "build": "npm run build --workspace client",
     "start": "npm run start --workspace server",
-    "test:shared": "node --test shared/test/*.test.js",
-    "test": "node --test shared/test/*.test.js server/test/*.test.js",
-    "bench:codec": "node shared/bench/codec-bench.js"
+    "test:shared": "node --experimental-strip-types --test shared/test/*.test.ts",
+    "test": "node --experimental-strip-types --test shared/test/*.test.ts server/test/*.test.ts",
+    "bench:codec": "node --experimental-strip-types shared/bench/codec-bench.ts",
+    "typecheck": "npm run typecheck --workspace shared && npm run typecheck --workspace server && npm run typecheck --workspace client"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=22.6"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "@types/node": "^22.15.30"
   }
 }

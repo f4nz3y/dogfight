@@ -4,8 +4,15 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.js",
-    "./sim": "./src/sim.js",
-    "./codec": "./src/codec.js"
+    ".": "./src/index.ts",
+    "./sim": "./src/sim.ts",
+    "./codec": "./src/codec.ts",
+    "./protocol": "./src/protocol.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "zod": "^3.25.76"
   }
 }

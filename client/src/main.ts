@@ -448,10 +448,11 @@ function render() {
 
 function frame(time) {
   if (!world || gameScreen.hidden) return;
-  const frameStart=performance.now();
-  performance.mark("simulate:start");
+
+  const frameStart = performance.now();
 
   if (!previousTime) previousTime = time;
+
   const elapsed = Math.min((time - previousTime) / 1000, 0.1);
   previousTime = time;
   accumulator += elapsed;
@@ -461,15 +462,14 @@ function frame(time) {
     accumulator -= STEP;
   }
 
-  performance.mark("simulate:end");
-  performance.measure("simulate","simulate:start","simulate:end");
-  performance.mark("render:start");
   render();
-  performance.mark("render:end");
-  performance.measure("render","render:start","render:end");
-  frameMetrics.add(performance.now()-frameStart);
+
+  frameMetrics.add(performance.now() - frameStart);
+
   animationId = requestAnimationFrame(frame);
 }
+
+(window as any).getFrameMetrics = () => frameMetrics.summary();
 
 $("#join-button").addEventListener("click", async () => {
   console.log("[DEBUG] 1. Натиснуто кнопку");

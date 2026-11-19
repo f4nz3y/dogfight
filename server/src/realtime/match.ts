@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { botInput } from "../bots.ts";
 import {
   createShipState, createAsteroids, integrate, stepAsteroids, mulberry32,
   encodeSnapshot, DT, TICK_RATE
@@ -36,6 +37,7 @@ export class Match {
     this.nextAsteroidId = this.targetAsteroidCount + 1;
     this.asteroidRespawns = [];
     this.bullets = [];
+    this.bulletPool = [];
     this.nextBulletId = 1;
     this.pickups = [];
     this.nextPickupId = 1;
@@ -50,7 +52,7 @@ export class Match {
     while (used.has(slot)) slot++;
     const state = createShipState(slot, this.seed, this.room.arena.width, this.room.arena.height);
     const entry = {
-      id: player.id, name: player.name, socket: player.socket, slot, state,
+      id: player.id, name: player.name, socket: player.socket, isBot: Boolean(player.isBot), slot, state,
       lastProcessedSeq: 0, pending: [],
       lastInput: { turn: 0, thrust: false, fire: false },
       nextFireTick: this.tick + 1, rapidFireUntilTick: 0, score: 0,
@@ -88,7 +90,8 @@ export class Match {
   spawnBullet(player) {
     const { state, slot } = player;
     const angle = state.angle;
-    this.bullets.push({
+    const bullet = this.bulletPool.pop() || {id:0,owner:0,x:0,y:0,vx:0,vy:0,ttl:0};
+    Object.assign(bullet,{
       id: this.nextBulletId++,
       owner: slot,
       x: state.x + Math.cos(angle) * 22,
@@ -97,6 +100,7 @@ export class Match {
       vy: Math.sin(angle) * 360 + state.vy * 0.5,
       ttl: 1.2
     });
+    this.bullets.push(bullet);
     // Cooldown is tick-based: one shot per cooldown, never catch up with a burst.
   }
 
@@ -137,6 +141,16 @@ export class Match {
     const { width, height } = this.room.arena;
 
     for (const player of this.players.values()) {
+      if (player.isBot) {
+        let closest=null, distance=Infinity;
+        for (const other of this.players.values()) {
+          if (other.id===player.id || other.hp<=0) continue;
+          const d=Math.hypot(other.state.x-player.state.x,other.state.y-player.state.y);
+          if(d<distance){distance=d;closest=other.state;}
+        }
+        const target=closest || {x:width/2+Math.sin(this.tick/30)*150,y:height/2};
+        player.lastInput=botInput(player.state,target,this.tick);
+      }
       if (player.invulnerableTicks > 0) player.invulnerableTicks--;
       if (player.hp === 0) {
         if (this.tick >= player.respawnAtTick) {
@@ -225,9 +239,13 @@ export class Match {
       this.nextPickupSpawnTick = Math.max(this.nextPickupSpawnTick, this.tick + TICK_RATE);
     }
 
-    this.bullets = this.bullets.filter(b =>
-      b.ttl > 0 && b.x >= 0 && b.x <= width && b.y >= 0 && b.y <= height
-    );
+    let kept = 0;
+    for (let i=0;i<this.bullets.length;i++) {
+      const b=this.bullets[i];
+      if(b.ttl>0 && b.x>=0 && b.x<=width && b.y>=0 && b.y<=height) this.bullets[kept++]=b;
+      else if(this.bulletPool.length<1024) this.bulletPool.push(b);
+    }
+    this.bullets.length=kept;
     this.respawnAsteroids(width, height);
 
     const snapshot = {
@@ -288,6 +306,7 @@ export class Match {
     clearTimeout(this.timer);
     this.timer = null;
     this.bullets = [];
+    this.bulletPool = [];
     this.pickups = [];
   }
 }

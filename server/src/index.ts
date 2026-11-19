@@ -1,5 +1,6 @@
 // @ts-nocheck
 import http from "node:http";
+import { performance } from "node:perf_hooks";
 import path from "node:path";
 import { createReadStream } from "node:fs";
 import { mkdir, readdir, stat } from "node:fs/promises";
@@ -7,7 +8,7 @@ import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 
 import { MatchLog } from "./log/matchlog.ts";
-import { attachWebSocket, getRealtimeStats } from "./ws.ts";
+import { attachWebSocket, getRealtimeStats, addBots } from "./ws.ts";
 import { config, clientDistDir } from "./config.ts";
 import { RoomManager } from "./rooms.ts";
 import { roomCreateSchema } from "@dogfight/shared/protocol";
@@ -157,7 +158,9 @@ const server = http.createServer(async (request, response) => {
     if (request.method === "GET" && url.pathname === "/api/stats") {
       sendJson(response, 200, {
         tickRate: 30,
-        matches: getRealtimeStats()
+        matches: getRealtimeStats(),
+        memory: process.memoryUsage(),
+        eventLoopUtilization: performance.eventLoopUtilization()
       });
       return;
     }
@@ -187,6 +190,18 @@ const server = http.createServer(async (request, response) => {
       } catch (error) {
         sendJson(response, 409, { error: error.message });
       }
+      return;
+    }
+
+    const botRoute = /^\/api\/rooms\/([a-f0-9-]+)\/bots$/i.exec(url.pathname);
+    if (request.method === "POST" && botRoute) {
+      const room=roomManager.getRoom(botRoute[1]);
+      if(!room){sendJson(response,404,{error:"Room not found"});return;}
+      let data;
+      try { data=JSON.parse(await readBody(request)); }
+      catch {sendJson(response,400,{error:"Invalid JSON"});return;}
+      try {const ids=addBots(room,data.count);sendJson(response,201,{added:ids.length,ids});}
+      catch(error){sendJson(response,400,{error:error.message});}
       return;
     }
 

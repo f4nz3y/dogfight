@@ -14,15 +14,29 @@
     "build": "npm run build --workspace client",
     "start": "npm run start --workspace server",
     "test:shared": "node --experimental-strip-types --test shared/test/*.test.ts",
-    "test": "node --experimental-strip-types --test shared/test/*.test.ts server/test/*.test.ts",
+    "test": "vitest run",
     "bench:codec": "node --experimental-strip-types shared/bench/codec-bench.ts",
-    "typecheck": "npm run typecheck --workspace shared && npm run typecheck --workspace server && npm run typecheck --workspace client"
+    "typecheck": "npm run typecheck --workspace shared && npm run typecheck --workspace server && npm run typecheck --workspace client",
+    "test:offline": "node --experimental-strip-types --test shared/test/*.test.ts server/test/*.test.ts",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "lint": "eslint .",
+    "load": "node --experimental-strip-types server/bench/load.ts",
+    "bench:worker": "node --experimental-strip-types client/bench/worker-bench.ts"
   },
   "engines": {
     "node": ">=22.6"
   },
   "devDependencies": {
     "typescript": "^5.8.3",
-    "@types/node": "^22.15.30"
+    "@types/node": "^22.15.30",
+    "vitest": "^3.2.4",
+    "@vitest/coverage-v8": "^3.2.4",
+    "fast-check": "^4.2.0",
+    "@playwright/test": "^1.55.0",
+    "eslint": "^9.33.0",
+    "@eslint/js": "^9.33.0",
+    "globals": "^16.3.0",
+    "typescript-eslint": "^8.40.0"
   }
 }

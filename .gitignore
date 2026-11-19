@@ -8,3 +8,6 @@ server/logs/
 Thumbs.db
 coverage/
 *.log
+test-results/
+playwright-report/
+*.cpuprofile

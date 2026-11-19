@@ -5,6 +5,7 @@ import { decodeInput } from "@dogfight/shared/codec";
 import { validateMessage } from "@dogfight/shared/protocol";
 import { config } from "./config.ts";
 import { Match } from "./realtime/match.ts";
+import { botInput } from "./bots.ts";
 
 const MAX_BUFFERED_BYTES = 64 * 1024;
 const matches = new Map();
@@ -52,6 +53,28 @@ function getMatch(room) {
   return match;
 }
 
+export function addBots(room, count) {
+ if (!Number.isInteger(count) || count < 1 || count > 32) throw new Error("count must be 1..32");
+ if (room.players.size + count > room.maxPlayers) throw new Error("Room capacity exceeded");
+ const match = getMatch(room);
+ const ids = [];
+ for (let i=0;i<count;i++) {
+   const socket = {
+  readyState: WebSocket.OPEN,
+  bufferedAmount: 0,
+  send(_data, options, callback) {
+    const cb = typeof options === "function" ? options : callback;
+    if (typeof cb === "function") {
+      cb(null);
+    }
+  }
+};
+   const player = {id:randomUUID(),name:`Bot ${room.players.size+1}`,socket,isBot:true};
+   room.join(player); match.add(player); ids.push(player.id);
+ }
+ for (const player of room.players.values()) if (!player.isBot) send(player.socket,{v:1,type:"roster",players:room.getRoster()});
+ return ids;
+}
 export function getRealtimeStats() {
   return [...matches.values()].map((match) => match.stats());
 }

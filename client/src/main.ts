@@ -1,4 +1,6 @@
 // @ts-nocheck
+import { frameMetrics } from "./performance.ts";
+// @ts-nocheck
 import "./style.css";
 
 import { fetchJson, loadAll } from "./assets/loader.ts";
@@ -446,6 +448,8 @@ function render() {
 
 function frame(time) {
   if (!world || gameScreen.hidden) return;
+  const frameStart=performance.now();
+  performance.mark("simulate:start");
 
   if (!previousTime) previousTime = time;
   const elapsed = Math.min((time - previousTime) / 1000, 0.1);
@@ -457,7 +461,13 @@ function frame(time) {
     accumulator -= STEP;
   }
 
+  performance.mark("simulate:end");
+  performance.measure("simulate","simulate:start","simulate:end");
+  performance.mark("render:start");
   render();
+  performance.mark("render:end");
+  performance.measure("render","render:start","render:end");
+  frameMetrics.add(performance.now()-frameStart);
   animationId = requestAnimationFrame(frame);
 }
 
@@ -599,3 +609,6 @@ window.addEventListener("blur", () => {
 
 showScreen(loadingScreen);
 loadGameAssets();
+
+// Accessible from Chrome DevTools: window.dogfightMetrics.summary()
+Object.assign(window,{dogfightMetrics:frameMetrics});

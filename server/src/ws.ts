@@ -4,16 +4,16 @@ import { randomUUID } from "node:crypto";
 import { decodeInput } from "@dogfight/shared/codec";
 import { validateMessage } from "@dogfight/shared/protocol";
 import { config } from "./config.ts";
+import { canSend } from "./backpressure.ts";
 import { Match } from "./realtime/match.ts";
 import { botInput } from "./bots.ts";
 import { log, rejectConnection, recordInbound, recordOutbound } from "./observability.ts";
 
-const MAX_BUFFERED_BYTES = 64 * 1024;
 const matches = new Map();
 
 function send(socket, message) {
   if (socket.readyState !== WebSocket.OPEN) return;
-  if (socket.bufferedAmount > MAX_BUFFERED_BYTES) {
+  if (!canSend(socket.bufferedAmount)) {
     log("warn", "ws.slow_client", {
       reason: "outbound_message_skipped"
     });
@@ -85,7 +85,10 @@ export function addBots(room, count) {
  return ids;
 }
 export function getRealtimeStats() {
-  return [...matches.values()].map((match) => match.stats());
+  return [...matches.entries()].map(([roomId, match]) => ({
+    roomId,
+    ...match.stats()
+  }));
 }
 
 export function attachWebSocket(server, roomManager) {

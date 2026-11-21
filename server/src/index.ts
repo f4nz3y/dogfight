@@ -118,7 +118,9 @@ function attachRoomLogging(room) {
         currentLog = new MatchLog(config.logDir, room.id);
         await currentLog.start();
         activeRoomLogs.set(room.id, currentLog);
-        console.log(`[LOG] Started: ${currentLog.fileName}`);
+        log("info", "match.log.started", {
+          fileName: currentLog.fileName
+        });
       }
 
       await currentLog.append(event);
@@ -126,11 +128,15 @@ function attachRoomLogging(room) {
       if (event.type === "empty") {
         await currentLog.close();
         activeRoomLogs.delete(room.id);
-        console.log(`[LOG] Closed room ${room.id}`);
+        log("info", "match.log.closed", {
+          roomId: room.id
+        });
         currentLog = null;
       }
     }).catch((error) => {
-      console.error("[LOG] Room event could not be written:", error);
+      log("error", "match.log.write_failed", {
+        error: String(error)
+      });
     });
 
     roomLogQueues.set(room.id, queue);
@@ -328,7 +334,9 @@ const server = http.createServer(async (request, response) => {
 
     sendJson(response, 404, { error: "Route not found" });
   } catch (error) {
-    console.error("[HTTP] Request error:", error);
+    log("error", "http.request.error", {
+      error: String(error)
+    });
     if (!response.headersSent) {
       sendJson(response, error.statusCode || 500, {
         error: error.statusCode === 413 ? "Request body too large" : "Internal server error"
@@ -352,7 +360,7 @@ async function startServer() {
 
   ready = true;
   log("info", "server.started", { host: config.host, port: config.port, version: config.version });
-  console.log("[WS] WebSocket endpoint: /ws");
+  log("info", "ws.endpoint.ready", { path: "/ws" });
 }
 
 async function shutdown(signal) {
@@ -373,7 +381,9 @@ async function shutdown(signal) {
     try {
       await log.close();
     } catch (error) {
-      console.error("[LOG] Shutdown error:", error.message);
+      log("error", "server.shutdown.error", {
+        error: error.message
+      });
     }
   }
   activeRoomLogs.clear();
@@ -390,7 +400,10 @@ process.once("SIGINT", () => shutdown("SIGINT"));
 process.once("SIGTERM", () => shutdown("SIGTERM"));
 
 startServer().catch((error) => {
-  console.error("[SERVER] Startup failed:", error);
+  log("error", "server.startup.failed", {
+    error: String(error),
+    stack: error instanceof Error ? error.stack : undefined
+  });
   process.exitCode = 1;
 });
 

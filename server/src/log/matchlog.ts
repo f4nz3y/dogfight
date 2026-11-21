@@ -4,6 +4,7 @@ import { createWriteStream } from "node:fs";
 import { mkdir } from "node:fs/promises";
 import { pipeline } from "node:stream/promises";
 import { once } from "node:events";
+import { log } from "../observability.ts";
 import path from "node:path";
 
 class JsonLinesTransform extends Transform {
@@ -38,7 +39,12 @@ export class MatchLog {
     const output = createWriteStream(this.filePath, { flags: "a" });
     this.pipelinePromise = pipeline(this.transform, output);
     this.pipelinePromise.catch((error) => {
-      if (!this.closed) console.error("[LOG] Pipeline error:", error);
+      if (!this.closed) {
+        log("error", "match.log.pipeline_error", {
+          error: String(error),
+          stack: error instanceof Error ? error.stack : undefined
+        });
+      }
     });
     return this.fileName;
   }

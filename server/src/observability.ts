@@ -1,10 +1,23 @@
 import { performance } from "node:perf_hooks";
 import { config } from "./config.ts";
 
-const levels = { debug: 10, info: 20, warn: 30, error: 40 };
-export function log(level: keyof typeof levels, event: string, fields: Record<string, unknown> = {}) {
-  if (levels[level] < levels[config.logLevel as keyof typeof levels]) return;
-  process.stdout.write(JSON.stringify({ time: new Date().toISOString(), level, event, ...fields }) + "\n");
+import pino from "pino";
+
+const logger = pino({
+  level: config.logLevel,
+  base: undefined,
+  timestamp: pino.stdTimeFunctions.isoTime,
+  formatters: {
+    level: (label) => ({ level: label })
+  }
+});
+
+export function log(
+  level: "debug" | "info" | "warn" | "error",
+  event: string,
+  fields: Record<string, unknown> = {}
+) {
+  logger[level]({ ...fields, event }, event);
 }
 const rejected = new Map<string, number>();
 export function rejectConnection(reason: string) {

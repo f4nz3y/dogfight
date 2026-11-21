@@ -14,13 +14,19 @@ const matches = new Map();
 function send(socket, message) {
   if (socket.readyState !== WebSocket.OPEN) return;
   if (socket.bufferedAmount > MAX_BUFFERED_BYTES) {
-    console.warn("[WS] Slow client: outbound message skipped");
+    log("warn", "ws.slow_client", {
+      reason: "outbound_message_skipped"
+    });
     return;
   }
   const serialized = JSON.stringify(message);
   recordOutbound(Buffer.byteLength(serialized));
   socket.send(serialized, (error) => {
-    if (error) console.error("[WS] Send error:", error.message);
+    if (error) {
+      log("error", "ws.send.error", {
+      error: error.message
+      });
+    }
   });
 }
 
@@ -139,7 +145,11 @@ export function attachWebSocket(server, roomManager) {
     }, 10000);
 
     socket.on("pong", () => { socket.isAlive = true; });
-    socket.on("error", (error) => console.error("[WS] Socket error:", error.message));
+    socket.on("error", (error) => {
+      log("error", "ws.socket.error", {
+        error: error.message
+      });
+    });
 
     socket.on("message", (raw, isBinary) => {
       recordInbound(raw.length);
@@ -277,7 +287,12 @@ export function attachWebSocket(server, roomManager) {
   }, 15000);
   heartbeat.unref();
 
-  wss.on("error", (error) => console.error("[WS] Server error:", error));
+  wss.on("error", (error) => {
+    log("error", "ws.server.error", {
+      error: error.message,
+      stack: error.stack
+    });
+  });
 
   return {
     wss,

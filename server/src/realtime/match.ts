@@ -1,5 +1,6 @@
 
  // @ts-nocheck
+import { log } from "../observability.ts";
 import { botInput } from "../bots.ts";
 import {
   createShipState, createAsteroids, integrate, stepAsteroids, mulberry32,
@@ -286,7 +287,11 @@ export class Match {
           this.totalBytesOut += Buffer.byteLength(text);
         } else {
           socket.send(binary, { binary: true }, error => {
-            if (error) console.error("[MATCH] Snapshot send error:", error.message);
+            if (error) {
+              log("error", "match.snapshot.send_error", {
+                error: error.message
+              });
+            }
           });
           this.totalBytesOut += binary.byteLength;
         }

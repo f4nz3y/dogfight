@@ -128,6 +128,9 @@ export class GameConnection extends EventTarget {
         this.rttMs = performance.now() - this.lastPingAt;
       }
 
+      if (message.type === "shutdown") {
+        this.emit("error", { message: "Сервер перезапускається. Повторне підключення..." });
+      }
       this.emit(message.type || "message", message);
     });
 

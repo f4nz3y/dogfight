@@ -6,6 +6,7 @@ import { validateMessage } from "@dogfight/shared/protocol";
 import { config } from "./config.ts";
 import { Match } from "./realtime/match.ts";
 import { botInput } from "./bots.ts";
+import { log, rejectConnection, recordInbound, recordOutbound } from "./observability.ts";
 
 const MAX_BUFFERED_BYTES = 64 * 1024;
 const matches = new Map();
@@ -16,7 +17,9 @@ function send(socket, message) {
     console.warn("[WS] Slow client: outbound message skipped");
     return;
   }
-  socket.send(JSON.stringify(message), (error) => {
+  const serialized = JSON.stringify(message);
+  recordOutbound(Buffer.byteLength(serialized));
+  socket.send(serialized, (error) => {
     if (error) console.error("[WS] Send error:", error.message);
   });
 }
@@ -81,6 +84,12 @@ export function getRealtimeStats() {
 
 export function attachWebSocket(server, roomManager) {
   const wss = new WebSocketServer({ noServer: true, maxPayload: config.maxPayload });
+  const ipConnections = new Map();
+  let stopping = false;
+  const failUpgrade = (socket, status, reason) => {
+    rejectConnection(reason);
+    socket.end(`HTTP/1.1 ${status} ${reason}\r\nConnection: close\r\n\r\n`);
+  };
 
   server.on("upgrade", (request, socket, head) => {
     let url;
@@ -90,11 +99,27 @@ export function attachWebSocket(server, roomManager) {
       socket.destroy();
       return;
     }
+    if (stopping) { failUpgrade(socket, 503, "Shutting down"); return; }
+    const origin = request.headers.origin;
+    if (origin && !config.allowedOrigins.includes(origin)) {
+      failUpgrade(socket, 403, "Origin not allowed"); return;
+    }
+    const ip = request.socket.remoteAddress || "unknown";
+    if ((ipConnections.get(ip) || 0) >= config.maxConnectionsPerIp) {
+      failUpgrade(socket, 429, "Too many connections"); return;
+    }
     if (url.pathname !== "/ws") {
       socket.destroy();
       return;
     }
+    ipConnections.set(ip, (ipConnections.get(ip) || 0) + 1);
+    let upgraded = false;
+    socket.once("close", () => {
+      if (!upgraded) ipConnections.set(ip, Math.max(0, (ipConnections.get(ip) || 1) - 1));
+    });
     wss.handleUpgrade(request, socket, head, (webSocket) => {
+      upgraded = true;
+      webSocket.once("close", () => ipConnections.set(ip, Math.max(0, (ipConnections.get(ip) || 1) - 1)));
       webSocket.netConditions = {
         latency: Math.max(0, Math.min(500, Number(url.searchParams.get("latency")) || 0)),
         jitter: Math.max(0, Math.min(200, Number(url.searchParams.get("jitter")) || 0)),
@@ -117,6 +142,7 @@ export function attachWebSocket(server, roomManager) {
     socket.on("error", (error) => console.error("[WS] Socket error:", error.message));
 
     socket.on("message", (raw, isBinary) => {
+      recordInbound(raw.length);
       if (isBinary) {
         if (!socket.player || !socket.matchEntry) return;
         let input;
@@ -197,7 +223,7 @@ export function attachWebSocket(server, roomManager) {
           room: room.toJSON()
         });
         sendToRoom(room, { v: 1, type: "roster", players: room.getRoster() });
-        console.log(`[WS] ${player.name} joined ${room.name} (slot ${socket.matchEntry.slot})`);
+        log("info", "player.joined", { roomId: room.id, playerId: player.id, slot: socket.matchEntry.slot });
         return;
       }
 
@@ -255,12 +281,23 @@ export function attachWebSocket(server, roomManager) {
 
   return {
     wss,
+    getConnectionCount() { return wss.clients.size; },
     async close() {
+      stopping = true;
       clearInterval(heartbeat);
       for (const match of matches.values()) match.stop();
       matches.clear();
-      for (const socket of wss.clients) socket.close(1001, "Server shutting down");
-      await new Promise((resolve) => wss.close(resolve));
+      for (const socket of wss.clients) {
+        send(socket, { v: 1, type: "shutdown", message: "Server restarting" });
+        socket.close(1001, "Server restarting");
+      }
+      await Promise.race([
+        new Promise(resolve => wss.close(resolve)),
+        new Promise(resolve => setTimeout(() => {
+          for (const socket of wss.clients) socket.terminate();
+          resolve();
+        }, 3000))
+      ]);
     }
   };
 }

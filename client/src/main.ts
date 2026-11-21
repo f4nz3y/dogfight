@@ -612,3 +612,10 @@ loadGameAssets();
 
 // Accessible from Chrome DevTools: window.dogfightMetrics.summary()
 Object.assign(window,{dogfightMetrics:frameMetrics});
+
+const versionLabel = document.getElementById("build-version");
+if (versionLabel) versionLabel.textContent = import.meta.env.VITE_APP_VERSION || "dev";
+
+if ("serviceWorker" in navigator && import.meta.env.PROD) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(console.warn));
+}

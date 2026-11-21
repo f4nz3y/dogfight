@@ -12,6 +12,7 @@ import { attachWebSocket, getRealtimeStats, addBots } from "./ws.ts";
 import { config, clientDistDir } from "./config.ts";
 import { RoomManager } from "./rooms.ts";
 import { roomCreateSchema } from "@dogfight/shared/protocol";
+import { log, metrics } from "./observability.ts";
 
 const roomManager = new RoomManager({
   maxRooms: config.maxRooms,
@@ -138,6 +139,8 @@ function attachRoomLogging(room) {
 
 roomManager.on("roomCreated", attachRoomLogging);
 
+let shuttingDown = false;
+let ready = false;
 const server = http.createServer(async (request, response) => {
   try {
     const url = new URL(request.url, `http://${request.headers.host || "localhost"}`);
@@ -145,11 +148,22 @@ const server = http.createServer(async (request, response) => {
     if (request.method === "GET" && url.pathname === "/health") {
       sendJson(response, 200, {
         status: "ok",
-        uptime: process.uptime()
+        uptime: process.uptime(),
+        version: config.version
       });
       return;
     }
 
+    if (request.method === "GET" && url.pathname === "/ready") {
+      sendJson(response, ready && !shuttingDown ? 200 : 503, { ready: ready && !shuttingDown, version: config.version });
+      return;
+    }
+    if (request.method === "GET" && url.pathname === "/metrics") {
+      response.writeHead(200, { "Content-Type": "text/plain; version=0.0.4; charset=utf-8", "Cache-Control": "no-store" });
+      response.end(metrics(roomManager, getRealtimeStats(), webSocket.getConnectionCount()));
+      return;
+    }
+    if (shuttingDown) { sendJson(response, 503, { error: "Server shutting down" }); return; }
     if (request.method === "GET" && url.pathname === "/api/rooms") {
       sendJson(response, 200, { rooms: roomManager.listRooms() });
       return;
@@ -336,16 +350,18 @@ async function startServer() {
     server.listen(config.port, config.host, resolve);
   });
 
-  console.log(`[SERVER] Listening on http://${config.host}:${config.port}`);
+  ready = true;
+  log("info", "server.started", { host: config.host, port: config.port, version: config.version });
   console.log("[WS] WebSocket endpoint: /ws");
 }
-
-let shuttingDown = false;
 
 async function shutdown(signal) {
   if (shuttingDown) return;
   shuttingDown = true;
-  console.log(`[SERVER] ${signal} received; shutting down...`);
+  ready = false;
+  log("info", "server.shutdown", { signal });
+  const force = setTimeout(() => { log("error", "server.shutdown_timeout"); process.exit(1); }, 9000);
+  force.unref();
 
   await webSocket.close();
 
@@ -366,6 +382,7 @@ async function shutdown(signal) {
     server.close(() => resolve());
   });
 
+  log("info", "server.stopped");
   process.exit(0);
 }
 
@@ -376,3 +393,10 @@ startServer().catch((error) => {
   console.error("[SERVER] Startup failed:", error);
   process.exitCode = 1;
 });
+
+for (const name of ["uncaughtException", "unhandledRejection"]) {
+  process.on(name, (error) => {
+    log("error", "server.fatal", { kind: name, error: String(error), stack: error?.stack });
+    process.exit(1);
+  });
+}

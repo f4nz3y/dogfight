@@ -1,0 +1,12 @@
+services:
+  dogfight:
+    build: .
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: "3001"
+      HOST: "0.0.0.0"
+      ALLOWED_ORIGINS: "http://localhost:3001,http://127.0.0.1:3001"
+      VERSION: "local-compose"
+    restart: unless-stopped
+    init: true

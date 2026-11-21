@@ -3,7 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dogfight — Лабораторна робота №5</title>
+    <link rel="manifest" href="/app.webmanifest" />
+    <meta name="theme-color" content="#080c18" />
+    <title>Dogfight — Dogfight v1.0</title>
   </head>
   <body>
     <main class="app">
@@ -20,7 +22,7 @@
       </section>
 
       <section id="lobby-screen" class="screen" hidden>
-        <h1>Dogfight Lobby — Lab 05</h1>
+        <h1>Dogfight Lobby</h1>
         <div class="network-settings">
           <label>Latency (ms)<input id="latency-input" type="number" min="0" max="500" value="100" /></label>
           <label>Jitter (ms)<input id="jitter-input" type="number" min="0" max="200" value="30" /></label>
@@ -48,6 +50,7 @@
         <h1>Dogfight</h1>
 
         <div class="hud">
+          <span>Версія: <strong id="build-version">dev</strong></span>
           <span>Здоров'я: <strong id="hp">3</strong></span>
           <span>Рахунок: <strong id="score">0</strong></span>
           <span>Кімната: <strong id="room-name">—</strong></span>

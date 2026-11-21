@@ -25,7 +25,7 @@ jobs:
             VERSION=${{ github.sha }}
       # Configure a platform deploy hook in GitHub Secrets to enable deployment.
       - name: Deploy (when configured)
-        if: ${{ secrets.DEPLOY_HOOK_URL != '' }}
         env:
           DEPLOY_HOOK_URL: ${{ secrets.DEPLOY_HOOK_URL }}
+        if: ${{ env.DEPLOY_HOOK_URL != '' }}
         run: curl --fail --show-error --silent --request POST "$DEPLOY_HOOK_URL"

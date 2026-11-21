@@ -9,8 +9,12 @@ COPY . .
 ARG VERSION=dev
 ENV VITE_APP_VERSION=$VERSION
 RUN npm run build
+RUN npm prune --omit=dev
 
-FROM node:22-alpine
+FROM alpine:3.22
+RUN apk add --no-cache nodejs \
+    && addgroup -g 1000 -S node \
+    && adduser -u 1000 -S node -G node
 ARG VERSION=dev
 ENV NODE_ENV=production HOST=0.0.0.0 PORT=3001 VERSION=$VERSION
 WORKDIR /app
@@ -18,7 +22,8 @@ COPY --from=build /app/package*.json ./
 COPY --from=build /app/client/package.json client/package.json
 COPY --from=build /app/server/package.json server/package.json
 COPY --from=build /app/shared/package.json shared/package.json
-RUN npm ci --omit=dev && npm cache clean --force
+COPY --from=build /app/node_modules ./node_modules
+RUN true
 COPY --from=build /app/client/dist client/dist
 COPY --from=build /app/server/src server/src
 COPY --from=build /app/shared/src shared/src
